@@ -1617,6 +1617,68 @@ pub struct B$0ar
     );
 }
 
+// Fails
+#[test]
+fn test_hover_intra_link() {
+    check(
+        r#"
+//- /lib.rs crate:foo
+/// [`Foo::bar()`][Foo::bar]
+pub struct Foo;
+impl {
+    /// foo
+    pub fn bar() {}
+}
+//- /main.rs crate:main deps:foo
+use foo::Foo$0;
+"#,
+        expect![[r#"
+                *Foo*
+
+                ```rust
+                foo
+                ```
+
+                ```rust
+                pub struct Foo
+                ```
+
+                ---
+
+                [`Foo::bar()`](https://docs.rs/foo/*/foo/struct.Foo.html#method.bar)
+            "#]], // Actual: [`Foo::bar()`](Foo::bar)
+    );
+}
+
+#[test]
+fn test_hover_intra_link2() {
+    check(
+        r#"
+//- /lib.rs crate:foo
+/// [`Bar`][Bar]
+pub struct Foo;
+pub struct Bar;
+//- /main.rs crate:main deps:foo
+use foo::Foo$0;
+"#,
+        expect![[r#"
+                *Foo*
+
+                ```rust
+                foo
+                ```
+
+                ```rust
+                pub struct Foo
+                ```
+
+                ---
+
+                [`Bar`](https://docs.rs/foo/*/foo/struct.Bar.html)
+            "#]],
+    );
+}
+
 #[test]
 fn test_hover_no_links() {
     check_hover_no_links(
